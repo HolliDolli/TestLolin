@@ -1,0 +1,98 @@
+esphome:
+  name: lolin
+esp32:
+  board: lolin32_lite
+  
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+#
+# Achtung: Für Offlinekalender muss der API-Reboot auf 0s gesetzt werden, da die Tonne sonst alle 15 Minuten neu startet.
+#
+api:
+  password: ""
+ #  reboot_timeout: 0s  # only enable this when creating an offline Wastebin
+
+ota:
+  password: ""
+
+wifi:
+  ssid: !secret GKssid
+#  for captive-portal remove password
+  password: !secret GKpassword
+  ap:
+    ssid: !secret FBssid
+    password: !secret FBpassword
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+captive_portal:
+#  keep_user_credentials: true  # option nicht aktiv.
+
+# i2c Bus auf D1 und D2 konfigurieren
+  
+time:
+  - platform: homeassistant
+
+sun:
+  latitude: 51.14°
+  longitude: 9.414°
+
+output:
+  - platform: gpio
+    pin: GPIO13
+    id: 'ota_mode'
+  - platform: gpio
+    pin: GPIO27
+    id: 'Sonar'
+
+  
+sensor:
+  - platform: ultrasonic
+    trigger_pin: GPIO14 
+    echo_pin: GPIO12
+    name: "Ultrasonic Sensor"
+    update_interval: 10s
+
+switch:
+  - platform: output
+    name: "Sonar"
+    output: "Sonar"
+    restore_mode: ALWAYS_ON
+  - platform: output
+    name: "OTA mode"
+    output: 'ota_mode'
+    on_turn_on:
+    - deep_sleep.prevent: deep_sleep_1
+    on_turn_off:
+    - deep_sleep.allow: deep_sleep_1
+  - platform: gpio
+    pin:
+      number: GPIO22
+      mode: output
+    id: LED1
+
+interval:
+  - interval: 2000ms
+    then:
+      - switch.toggle: LED1      
+
+
+deep_sleep:
+  run_duration: 2min
+  sleep_duration: 1min
+  id: deep_sleep_1
+  
+#mqtt:
+#  broker: 192.168.2.10
+#  username: !secret MQTTuser
+#  password: !secret MQTTpassword
+#  on_message:
+#    - topic: BG_Briefkasten/ota_mode
+#      payload: 'ON'
+#      then:
+#        - deep_sleep.prevent: deep_sleep_1
+#    - topic: BG_Briefkasten/sleep_mode
+#      payload: 'ON'
+#      then:
+#        - deep_sleep.enter: deep_sleep_1
