@@ -1,7 +1,8 @@
-esphome:
-  name: lolin
 esp32:
   board: lolin32_lite
+  
+esphome:
+  name: lolin
   
 # Enable logging
 logger:
@@ -45,6 +46,18 @@ output:
   - platform: gpio
     pin: GPIO27
     id: 'Sonar'
+  - platform: gpio
+    pin: GPIO22
+    id: 'LEDint'
+  - platform: gpio
+    pin: GPIO33
+    id: 'LED1'
+  - platform: gpio
+    pin: GPIO32
+    id: 'LED2'
+  - platform: gpio
+    pin: GPIO25
+    id: 'LED3'
 
   
 sensor:
@@ -52,7 +65,7 @@ sensor:
     trigger_pin: GPIO14 
     echo_pin: GPIO12
     name: "Ultrasonic Sensor"
-    update_interval: 10s
+    update_interval: 1min
 
 switch:
   - platform: output
@@ -66,21 +79,35 @@ switch:
     - deep_sleep.prevent: deep_sleep_1
     on_turn_off:
     - deep_sleep.allow: deep_sleep_1
-  - platform: gpio
-    pin:
-      number: GPIO22
-      mode: output
-    id: LED1
+  - platform: output
+    name: "LEDint"
+    output: "LEDint"
+    inverted: true
+    restore_mode: ALWAYS_ON
+  - platform: output
+    name: "LED1"
+    output: "LED1"
+    restore_mode: ALWAYS_ON
+  - platform: output
+    name: "LED2"
+    output: "LED2"
+    restore_mode: ALWAYS_ON
+  - platform: output
+    name: "LED3"
+    output: "LED3"
+    restore_mode: ALWAYS_ON
+
 
 interval:
-  - interval: 2000ms
+  - interval: 240s
     then:
-      - switch.toggle: LED1      
-
+      - logger.log:
+          format: "still alive"   
+          level: "DEBUG"
 
 deep_sleep:
-  run_duration: 2min
-  sleep_duration: 1min
+  run_duration: 5min
+  sleep_duration: 10min
   id: deep_sleep_1
   
 #mqtt:
