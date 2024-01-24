@@ -3,7 +3,10 @@ esp32:
   
 esphome:
   name: lolin
-  
+  on_boot:
+    then:
+      - script.execute: consider_deep_sleep
+
 # Enable logging
 logger:
 
@@ -41,9 +44,6 @@ sun:
 
 output:
   - platform: gpio
-    pin: GPIO13
-    id: 'ota_mode'
-  - platform: gpio
     pin: GPIO27
     id: 'Sonar'
   - platform: gpio
@@ -59,6 +59,29 @@ output:
     pin: GPIO25
     id: 'LED3'
 
+binary_sensor:
+  - platform: homeassistant
+    id: prevent_deep_sleep
+    name: Prevent Deep Sleep
+    entity_id: input_boolean.bg_briefkasten_prevent_deepsleep
+    on_state: 
+      - script.execute: consider_deep_sleep
+
+
+
+script:
+  - id: consider_deep_sleep
+    mode: restart
+    then:
+      - if:
+          condition:
+            binary_sensor.is_on: prevent_deep_sleep
+          then:
+            - logger.log: 'Skipping sleep, per prevent_deep_sleep'
+            - deep_sleep.prevent: deep_sleep_1
+          else:
+            - logger.log: 'Allowing sleep, per prevent_deep_sleep'
+            - deep_sleep.allow: deep_sleep_1
   
 sensor:
   - platform: ultrasonic
@@ -72,13 +95,6 @@ switch:
     name: "Sonar"
     output: "Sonar"
     restore_mode: ALWAYS_ON
-  - platform: output
-    name: "OTA mode"
-    output: 'ota_mode'
-    on_turn_on:
-    - deep_sleep.prevent: deep_sleep_1
-    on_turn_off:
-    - deep_sleep.allow: deep_sleep_1
   - platform: output
     name: "LEDint"
     output: "LEDint"
@@ -99,6 +115,9 @@ switch:
 
 
 interval:
+  - interval: 10s
+    then:
+      - script.execute: consider_deep_sleep
   - interval: 240s
     then:
       - logger.log:
@@ -109,6 +128,7 @@ deep_sleep:
   run_duration: 5min
   sleep_duration: 10min
   id: deep_sleep_1
+  
   
 #mqtt:
 #  broker: 192.168.2.10
