@@ -49,15 +49,6 @@ output:
   - platform: gpio
     pin: GPIO22
     id: 'LEDint'
-  - platform: gpio
-    pin: GPIO33
-    id: 'LED1'
-  - platform: gpio
-    pin: GPIO32
-    id: 'LED2'
-  - platform: gpio
-    pin: GPIO25
-    id: 'LED3'
 
 binary_sensor:
   - platform: homeassistant
@@ -88,7 +79,9 @@ sensor:
     trigger_pin: GPIO14 
     echo_pin: GPIO12
     name: "Ultrasonic Sensor"
-    update_interval: 1min
+    update_interval: 1s
+#    pulse_time: 15us
+#    timeout: 5m 
 
 switch:
   - platform: output
@@ -100,46 +93,15 @@ switch:
     output: "LEDint"
     inverted: true
     restore_mode: ALWAYS_ON
-  - platform: output
-    name: "LED1"
-    output: "LED1"
-    restore_mode: ALWAYS_ON
-  - platform: output
-    name: "LED2"
-    output: "LED2"
-    restore_mode: ALWAYS_ON
-  - platform: output
-    name: "LED3"
-    output: "LED3"
-    restore_mode: ALWAYS_ON
-
 
 interval:
   - interval: 10s
     then:
       - script.execute: consider_deep_sleep
-  - interval: 240s
-    then:
-      - logger.log:
-          format: "still alive"   
-          level: "DEBUG"
 
 deep_sleep:
-  run_duration: 5min
-  sleep_duration: 10min
+  run_duration: 59min
+  sleep_duration: 10s
   id: deep_sleep_1
   
   
-#mqtt:
-#  broker: 192.168.2.10
-#  username: !secret MQTTuser
-#  password: !secret MQTTpassword
-#  on_message:
-#    - topic: BG_Briefkasten/ota_mode
-#      payload: 'ON'
-#      then:
-#        - deep_sleep.prevent: deep_sleep_1
-#    - topic: BG_Briefkasten/sleep_mode
-#      payload: 'ON'
-#      then:
-#        - deep_sleep.enter: deep_sleep_1
