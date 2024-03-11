@@ -4,8 +4,16 @@ esp32:
 esphome:
   name: lolin
   on_boot:
+    priority: -100
     then:
+      - logger.log: 'Lolin boot triggered'
+      - switch.turn_on: SW27
       - script.execute: consider_deep_sleep
+  on_shutdown:
+    priority: -100
+    then:
+      - switch.turn_off: SW27
+      - logger.log: "Lolin shutdown triggered"
 
 # Enable logging
 logger:
@@ -44,21 +52,72 @@ sun:
 
 output:
   - platform: gpio
-    pin: GPIO27
-    id: 'Sonar'
-  - platform: gpio
     pin: GPIO22
     id: 'LEDint'
+  - platform: gpio
+    pin: GPIO25
+    id: 'GPIO25'
+  - platform: gpio
+    pin: GPIO26
+    id: 'GPIO26'
+  - platform: gpio
+    pin: GPIO27
+    id: 'GPIO27'
+    
+text_sensor:
+  - platform: version
+    name: "ESPHome Version"  
 
 binary_sensor:
   - platform: homeassistant
     id: prevent_deep_sleep
     name: Prevent Deep Sleep
+    entity_id: input_boolean.test_lolin_prevent_deepsleep
+    on_state: 
+      - script.execute: consider_deep_sleep
+  - platform: homeassistant
+    id: lolin_prevent_deep_sleep
+    name: Lolin Prevent Deep Sleep
     entity_id: input_boolean.bg_briefkasten_prevent_deepsleep
     on_state: 
       - script.execute: consider_deep_sleep
 
-
+      
+sensor:
+  - platform: adc
+    pin: GPIO32
+    name: GPIO32    
+    attenuation: auto
+  - platform: adc
+    pin: GPIO33
+    name: GPIO33    
+    attenuation: auto
+  - platform: adc
+    pin: GPIO34
+    name: GPIO34    
+    attenuation: auto
+#    update_interval: 2s
+  - platform: adc
+    pin: GPIO35
+    name: GPIO35    
+    attenuation: auto
+#    update_interval: 2s
+  - platform: adc
+    pin: GPIO36
+    name: GPIO36    
+    attenuation: auto
+  - platform: adc
+    pin: GPIO37
+    name: GPIO37    
+    attenuation: auto
+  - platform: adc
+    pin: GPIO38
+    name: GPIO38    
+    attenuation: auto
+  - platform: adc
+    pin: GPIO39
+    name: GPIO39    
+    attenuation: auto
 
 script:
   - id: consider_deep_sleep
@@ -66,33 +125,40 @@ script:
     then:
       - if:
           condition:
-            binary_sensor.is_on: prevent_deep_sleep
+            api.connected:
           then:
-            - logger.log: 'Skipping sleep, per prevent_deep_sleep'
+            - if:
+                condition:
+                  binary_sensor.is_off: prevent_deep_sleep
+                then:
+#                  - logger.log: 'Allowing sleep, per prevent_deep_sleep'
+                  - deep_sleep.allow: deep_sleep_1
+                else:
+#                  - logger.log: 'Skipping sleep, per prevent_deep_sleep'
+                  - deep_sleep.prevent: deep_sleep_1
+          else:  
+#            - logger.log: 'Skipping sleep, per no api connection'
             - deep_sleep.prevent: deep_sleep_1
-          else:
-            - logger.log: 'Allowing sleep, per prevent_deep_sleep'
-            - deep_sleep.allow: deep_sleep_1
   
-sensor:
-  - platform: ultrasonic
-    trigger_pin: GPIO14 
-    echo_pin: GPIO12
-    name: "Ultrasonic Sensor"
-    update_interval: 1s
-#    pulse_time: 15us
-#    timeout: 5m 
-
 switch:
-  - platform: output
-    name: "Sonar"
-    output: "Sonar"
-    restore_mode: ALWAYS_ON
   - platform: output
     name: "LEDint"
     output: "LEDint"
     inverted: true
     restore_mode: ALWAYS_ON
+  - platform: output
+    name: "SW25"
+    output: "GPIO25"
+    restore_mode: ALWAYS_ON
+  - platform: output
+    name: "SW26"
+    output: "GPIO26"
+    restore_mode: ALWAYS_ON
+  - platform: output
+    id: SW27
+    name: "SW27"
+    output: "GPIO27"
+    restore_mode: ALWAYS_OFF
 
 interval:
   - interval: 10s
@@ -100,8 +166,11 @@ interval:
       - script.execute: consider_deep_sleep
 
 deep_sleep:
-  run_duration: 59min
-  sleep_duration: 10s
+  run_duration: 2min
+  sleep_duration: 2min
   id: deep_sleep_1
+#  wakeup_pin_mode: INVERT_WAKEUP
+#  wakeup_pin:
+#    number: GPIO12
   
   
