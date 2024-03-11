@@ -1,0 +1,33 @@
+esp32:
+  board: lolin32_lite
+  
+esphome:
+  name: blinklolin
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+#
+# Achtung: Für Offlinekalender muss der API-Reboot auf 0s gesetzt werden, da die Tonne sonst alle 15 Minuten neu startet.
+#
+
+output:
+  - platform: gpio
+    pin: GPIO22
+    id: 'GPLEDint'
+    
+switch:
+  - platform: output
+    id: LEDint
+    name: "LEDint"
+    output: "GPLEDint"
+    inverted: true
+    restore_mode: ALWAYS_ON
+
+interval:
+  - interval: 1s
+    then:
+      - switch.toggle: LEDint
+  
+  
