@@ -40,6 +40,8 @@ wifi:
 captive_portal:
 #  keep_user_credentials: true  # option nicht aktiv.
 
+ota:
+  - platform: esphome
 
 output:
   - platform: gpio
@@ -57,6 +59,17 @@ switch:
 interval:
   - interval: 1s
     then:
-      - switch.toggle: LEDint
+      - if:
+          condition:
+            wifi.connected:
+          then:
+            - switch.toggle: LEDint
+  - interval: 2s
+    then:
+      - if:
+          condition:
+            wifi.connected:
+          else:
+            - switch.toggle: LEDint
   
   
